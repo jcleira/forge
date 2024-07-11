@@ -1,0 +1,517 @@
+openapi: 3.0.3
+info:
+  title: API - Clients
+  description: Clients
+  license:
+    name: proprietary
+    url: N/A
+  version: "1.0"
+servers:
+  - url: https://api.clients.com
+    description: Production
+  - url: http://api-{branch}.{cluster}.clients.co
+    description: Staging
+    variables:
+      branch:
+        default: master
+      cluster:
+        default: staging
+        enum:
+          - staging
+          - staging2
+          - staging3
+paths:
+  /v1/clients:
+    post:
+      tags:
+        - Clients
+      summary: Create a client
+      description: |
+        Creates a client.
+
+        This client will be used to create quotes, credit notes.
+      operationId: create-client
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/components/schemas/ClientPayloadCreate'
+              required:
+                - data
+        required: true
+      responses:
+        '200':
+          description: Client created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ClientResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '412':
+          $ref: '#/components/responses/FailedPrecondition'
+        '422':
+          $ref: '#/components/responses/UnprocessableContentClient'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags:
+        - Clients
+      summary: List clients
+      operationId: list-clients
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/ClientListFilter'
+        - $ref: '#/components/parameters/ClientListSort'
+        - $ref: '#/components/parameters/ListPage'
+        - $ref: '#/components/parameters/ListPerPage'
+      responses:
+        '200':
+          description: An array of clients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClientResponse'
+                  meta:
+                    $ref: '#/components/schemas/ListMeta'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/FailedPrecondition'
+        '422':
+          $ref: '#/components/responses/UnprocessableContentClient'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/clients/{client_id}:
+    get:
+      tags:
+        - Clients
+      summary: Get client by id
+      operationId: get-client
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/ClientID'
+      responses:
+        '200':
+          description: A client
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ClientResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/FailedPrecondition'
+        '422':
+          $ref: '#/components/responses/UnprocessableContentClient'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - Clients
+      summary: Update client
+      operationId: update-client
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/ClientID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: '#/components/schemas/ClientPayload_Update'
+              required:
+                - data
+        required: true
+      responses:
+        '200':
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ClientResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          $ref: '#/components/responses/FailedPrecondition'
+        '422':
+          $ref: '#/components/responses/UnprocessableContentClient'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    clients.read:
+      description: Membership should have clients.read permission to see the list of Invoice
+      type: http
+      scheme: permissions
+  parameters:
+    ClientListFilter:
+      name: filter
+      description: Attributes to filter by.
+      in: query
+      schema:
+        type: object
+        properties:
+          organization_id:
+            type: string
+            format: uuid
+          tax_identification_number:
+            type: string
+          vat_number:
+            type: string
+          email:
+            type: string
+          name:
+            type: string
+          created_at_from:
+            type: string
+          created_at_to:
+            type: string
+        example:
+          created_at_from: '2022-01-21T12:01:02Z'
+          created_at_to: '2022-01-21T12:01:02Z'
+      style: deepObject
+      explode: true
+    ClientListSort:
+      name: sort_by
+      description: |
+        Attributes to sort by. Format is "field:order". Available orders are "asc" (Ascending) and "desc" (Descending).
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum:
+            - name
+            - created_at
+      style: form
+      explode: false
+    ListPage:
+      name: page
+      description: The page to retrieve
+      in: query
+      schema:
+        type: integer
+    ListPerPage:
+      name: per_page
+      description: Number of items per page
+      in: query
+      schema:
+        type: integer
+    ClientID:
+      name: client_id
+      in: path
+      description: Client unique identifier
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    ClientResponse:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the client. It is a concatenation of first and last name.
+          example: John Doe
+        first_name:
+          type: string
+          example: John
+        last_name:
+          type: string
+          example: Doe
+        kind:
+          type: string
+          enum:
+            - individual
+            - freelancer
+          example: individual
+        email:
+          type: string
+          format: email
+          example: john.doe@clients.eu
+        locale:
+          type: string
+          example: fr
+          description: |
+            The locale of the client.
+        address:
+          type: string
+          description: |
+            The address of the client. (eg street, number, floor, door, etc)
+          example: 123 Main Street
+        city:
+          type: string
+          example: Paris
+        zip_code:
+          type: string
+          example: '75009'
+        province_code:
+          type: string
+          description: Represents the province code of the client.
+        country_code:
+          type: string
+          example: fr
+    Error:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              code:
+                type: string
+              detail:
+                type: string
+              source:
+                type: object
+                properties:
+                  pointer:
+                    type: string
+            required:
+              - status
+              - code
+              - detail
+    ClientValidationError:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                enum:
+                  - required_unless
+                  - required
+                  - max
+                  - iso3166_1_alpha2
+                  - bcp47_language_tag
+              detail:
+                type: string
+              status:
+                type: string
+                example: "422"
+              source:
+                type: object
+                anyOf:
+                  - properties:
+                      pointer:
+                        type: string
+                        enum:
+                          - /data/attributes/first_name
+                          - /data/attributes/last_name
+                          - /data/attributes/kind
+                          - /data/attributes/email
+                          - /data/attributes/address
+                          - /data/attributes/city
+                          - /data/attributes/zip_code
+                          - /data/attributes/country
+                          - /data/attributes/province_code
+                          - /data/attributes/locale
+    ClientPayloadCreate:
+      type: object
+      description: |
+        A client that is an individual or a freelancer.
+      properties:
+        type:
+          type: string
+          enum:
+            - customers
+        attributes:
+          type: object
+          properties:
+            first_name:
+              type: string
+              maxLength: 60
+              example: John
+            last_name:
+              type: string
+              maxLength: 60
+              example: Doe
+            kind:
+              type: string
+              enum:
+                - individual
+                - freelancer
+              example: individual
+            email:
+              type: string
+              format: email
+              example: john.doe@clients.eu
+              maxLength: 250
+            locale:
+              type: string
+              maxLength: 2
+              minLength: 2
+              example: fr
+              description: |
+                The locale of the client. It is used to generate the invoice in this language.
+            address:
+              type: string
+              maxLength: 250
+              description: |
+                The address of the client. (eg street, number, floor, door, etc)
+            city:
+              type: string
+              maxLength: 50
+              example: Paris
+            zip_code:
+              type: string
+              maxLength: 20
+              example: '75009'
+            province_code:
+              type: string
+              maxLength: 2
+              description: Represents the province code of the client. It is required only for Italian organizations
+            country_code:
+              type: string
+              maxLength: 2
+              example: fr
+          required:
+            - first_name
+            - last_name
+            - email
+        relationships:
+          type: object
+          properties:
+            organization:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                        - organizations
+                    id:
+                      type: string
+                      format: uuid
+                  required:
+                    - type
+                    - id
+              required:
+                - data
+          required:
+            - organization
+      required:
+        - type
+        - attributes
+        - relationships
+    ListMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 2
+        next_page:
+          type: integer
+          example: null
+        prev_page:
+          type: integer
+          example: 1
+        total_pages:
+          type: integer
+          example: 2
+        total_count:
+          type: integer
+          example: 150
+        per_page:
+          type: integer
+          example: 100
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    FailedPrecondition:
+      description: Failed precondition
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnprocessableContentClient:
+      description: Unprocessable content
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ClientValidationError'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
