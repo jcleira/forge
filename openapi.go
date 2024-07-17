@@ -96,20 +96,75 @@ type parameter struct {
 	Style           string `yaml:"style"`
 	Explode         bool   `yaml:"explode"`
 	allowReserved   bool   `yaml:"allowReserved"`
-	// TODO we are here
-	Schema schema `yaml:"schema"`
+	Schema          schema `yaml:"schema"`
 }
 
 type schema struct {
-	Ref         string              `yaml:"$ref,omitempty"`
-	Type        string              `yaml:"type"`
-	Properties  map[string]property `yaml:"properties,omitempty"`
-	Items       *schema             `yaml:"items,omitempty"`
-	Required    []string            `yaml:"required,omitempty"`
-	Description string              `yaml:"description,omitempty"`
-	Enum        []string            `yaml:"enum,omitempty"`
-	Format      string              `yaml:"format,omitempty"`
-	Example     interface{}         `yaml:"example,omitempty"`
+	Ref         string      `yaml:"$ref,omitempty"`
+	Type        string      `yaml:"type"`
+	Description string      `yaml:"description,omitempty"`
+	Example     interface{} `yaml:"example,omitempty"`
+
+	Spec any
+}
+
+func (s *schema) UnmarshalYAML(node *yaml.Node) error {
+	type alias schema
+
+	var temp alias
+	if err := node.Decode(&temp); err != nil {
+		return err
+	}
+	*s = schema(temp)
+
+	switch s.Type {
+	case "string":
+		var spec schemaString
+		if err := node.Decode(&spec); err != nil {
+			return err
+		}
+		s.Spec = spec
+	case "integer":
+		var spec schemaInteger
+		if err := node.Decode(&spec); err != nil {
+			return err
+		}
+		s.Spec = spec
+	case "array":
+		var spec schemaArray
+		if err := node.Decode(&spec); err != nil {
+			return err
+		}
+		s.Spec = spec
+	default:
+		s.Spec = nil
+	}
+
+	return nil
+}
+
+type schemaString struct {
+	schema
+	Required bool     `yaml:"required,omitempty"`
+	Format   string   `yaml:"format,omitempty"`
+	Enum     []string `yaml:"enum,omitempty"`
+}
+
+type schemaInteger struct {
+	schema
+	Required bool `yaml:"required,omitempty"`
+}
+
+type schemaArray struct {
+	schema
+	Items    schema `yaml:"items"`
+	Required bool   `yaml:"required,omitempty"`
+}
+
+type schemaObject struct {
+	schema
+	Properties map[string]property `yaml:"properties"`
+	Required   []string            `yaml:"required,omitempty"`
 }
 
 type requestBody struct {

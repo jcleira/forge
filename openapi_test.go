@@ -86,12 +86,6 @@ func validOpenAPI() openAPI {
 							"application/json": {
 								Schema: schema{
 									Type: "object",
-									Properties: map[string]property{
-										"data": {
-											Ref: "#/components/schemas/ClientPayloadCreate",
-										},
-									},
-									Required: []string{"data"},
 								},
 							},
 						},
@@ -104,11 +98,6 @@ func validOpenAPI() openAPI {
 								"application/json": {
 									Schema: schema{
 										Type: "object",
-										Properties: map[string]property{
-											"data": {
-												Ref: "#/components/schemas/ClientResponse",
-											},
-										},
 									},
 								},
 							},
@@ -139,17 +128,6 @@ func validOpenAPI() openAPI {
 								"application/json": {
 									Schema: schema{
 										Type: "object",
-										Properties: map[string]property{
-											"data": {
-												Type: "array",
-												Items: &schema{
-													Ref: "#/components/schemas/ClientResponse",
-												},
-											},
-											"meta": {
-												Ref: "#/components/schemas/ListMeta",
-											},
-										},
 									},
 								},
 							},
@@ -180,14 +158,16 @@ func validOpenAPI() openAPI {
 					In:          "query",
 					Schema: schema{
 						Type: "object",
-						Properties: map[string]property{
-							"organization_id":           {Type: "string", Format: "uuid"},
-							"tax_identification_number": {Type: "string"},
-							"vat_number":                {Type: "string"},
-							"email":                     {Type: "string"},
-							"name":                      {Type: "string"},
-							"created_at_from":           {Type: "string"},
-							"created_at_to":             {Type: "string"},
+						Spec: schemaObject{
+							Properties: map[string]property{
+								"organization_id":           {Type: "string", Format: "uuid"},
+								"tax_identification_number": {Type: "string"},
+								"vat_number":                {Type: "string"},
+								"email":                     {Type: "string"},
+								"name":                      {Type: "string"},
+								"created_at_from":           {Type: "string"},
+								"created_at_to":             {Type: "string"},
+							},
 						},
 						Example: map[string]interface{}{
 							"created_at_from": "2022-01-21T12:01:02Z",
@@ -203,9 +183,13 @@ func validOpenAPI() openAPI {
 					In:          "query",
 					Schema: schema{
 						Type: "array",
-						Items: &schema{
-							Type: "string",
-							Enum: []string{"name", "created_at"},
+						Spec: schemaArray{
+							Items: schema{
+								Type: "string",
+								Spec: schemaString{
+									Enum: []string{"name", "created_at"},
+								},
+							},
 						},
 					},
 					Style:   "form",
@@ -233,64 +217,74 @@ func validOpenAPI() openAPI {
 					Description: "Client unique identifier",
 					Required:    true,
 					Schema: schema{
-						Type:   "string",
-						Format: "uuid",
+						Type: "string",
+						Spec: schemaString{Format: "uuid"},
 					},
 				},
 			},
 			Schemas: map[string]schema{
 				"ClientResponse": {
 					Type: "object",
-					Properties: map[string]property{
-						"name":          {Type: "string", Description: "The name of the client. It is a concatenation of first and last name.", Example: "John Doe"},
-						"first_name":    {Type: "string", Example: "John"},
-						"last_name":     {Type: "string", Example: "Doe"},
-						"kind":          {Type: "string", Enum: []string{"individual", "freelancer"}, Example: "individual"},
-						"email":         {Type: "string", Format: "email", Example: "john.doe@clients.eu"},
-						"locale":        {Type: "string", Example: "fr", Description: "The locale of the client."},
-						"address":       {Type: "string", Description: "The address of the client. (eg street, number, floor, door, etc)", Example: "123 Main Street"},
-						"city":          {Type: "string", Example: "Paris"},
-						"zip_code":      {Type: "string", Example: "75009"},
-						"province_code": {Type: "string", Description: "Represents the province code of the client."},
-						"country_code":  {Type: "string", Example: "fr"},
+					Spec: schemaObject{
+						Properties: map[string]property{
+							"name":          {Type: "string", Description: "The name of the client. It is a concatenation of first and last name.", Example: "John Doe"},
+							"first_name":    {Type: "string", Example: "John"},
+							"last_name":     {Type: "string", Example: "Doe"},
+							"kind":          {Type: "string", Enum: []string{"individual", "freelancer"}, Example: "individual"},
+							"email":         {Type: "string", Format: "email", Example: "john.doe@clients.eu"},
+							"locale":        {Type: "string", Example: "fr", Description: "The locale of the client."},
+							"address":       {Type: "string", Description: "The address of the client. (eg street, number, floor, door, etc)", Example: "123 Main Street"},
+							"city":          {Type: "string", Example: "Paris"},
+							"zip_code":      {Type: "string", Example: "75009"},
+							"province_code": {Type: "string", Description: "Represents the province code of the client."},
+							"country_code":  {Type: "string", Example: "fr"},
+						},
 					},
 				},
 				"Error": {
 					Type: "object",
-					Properties: map[string]property{
-						"errors": {
-							Type: "array",
-							Items: &schema{
-								Type: "object",
-								Properties: map[string]property{
-									"status": {Type: "string"},
-									"code":   {Type: "string"},
-									"detail": {Type: "string"},
-									"source": {
-										Type: "object",
+					Spec: schemaObject{
+						Properties: map[string]property{
+							"errors": {
+								Type: "array",
+								Items: &schema{
+									Type: "object",
+									Spec: schemaObject{
 										Properties: map[string]property{
-											"pointer": {Type: "string"},
+											"status": {Type: "string"},
+											"code":   {Type: "string"},
+											"detail": {Type: "string"},
+											"source": {
+												Type: "object",
+												Properties: map[string]property{
+													"pointer": {Type: "string"},
+												},
+											},
 										},
+										Required: []string{"status", "code", "detail"},
 									},
 								},
-								Required: []string{"status", "code", "detail"},
 							},
 						},
 					},
 				},
 				"ClientValidationError": {
-					Type:     "object",
-					Required: []string{"errors"},
-					Properties: map[string]property{
-						"errors": {
-							Type: "array",
-							Items: &schema{
-								Type:     "object",
-								Required: []string{"code"},
-								Properties: map[string]property{
-									"code":   {Type: "string", Enum: []string{"required_unless", "required", "max", "iso3166_1_alpha2", "bcp47_language_tag"}},
-									"detail": {Type: "string"},
-									"status": {Type: "string", Example: "422"},
+					Type: "object",
+					Spec: schemaObject{
+						Required: []string{"errors"},
+						Properties: map[string]property{
+							"errors": {
+								Type: "array",
+								Items: &schema{
+									Type: "object",
+									Spec: schemaObject{
+										Required: []string{"code"},
+										Properties: map[string]property{
+											"code":   {Type: "string", Enum: []string{"required_unless", "required", "max", "iso3166_1_alpha2", "bcp47_language_tag"}},
+											"detail": {Type: "string"},
+											"status": {Type: "string", Example: "422"},
+										},
+									},
 								},
 							},
 						},
@@ -299,56 +293,60 @@ func validOpenAPI() openAPI {
 				"ClientPayloadCreate": {
 					Type:        "object",
 					Description: "A client that is an individual or a freelancer.",
-					Properties: map[string]property{
-						"type": {Type: "string", Enum: []string{"customers"}},
-						"attributes": {
-							Type: "object",
-							Properties: map[string]property{
-								"first_name":    {Type: "string", MaxLength: 60, Example: "John"},
-								"last_name":     {Type: "string", MaxLength: 60, Example: "Doe"},
-								"kind":          {Type: "string", Enum: []string{"individual", "freelancer"}, Example: "individual"},
-								"email":         {Type: "string", Format: "email", Example: "john.doe@clients.eu", MaxLength: 250},
-								"locale":        {Type: "string", MaxLength: 2, MinLength: 2, Example: "fr", Description: "The locale of the client. It is used to generate the invoice in this language."},
-								"address":       {Type: "string", MaxLength: 250, Description: "The address of the client. (eg street, number, floor, door, etc)"},
-								"city":          {Type: "string", MaxLength: 50, Example: "Paris"},
-								"zip_code":      {Type: "string", MaxLength: 20, Example: "75009"},
-								"province_code": {Type: "string", MaxLength: 2, Description: "Represents the province code of the client. It is required only for Italian organizations"},
-								"country_code":  {Type: "string", MaxLength: 2, Example: "fr"},
-							},
-							Required: []string{"first_name", "last_name", "email"},
-						},
-						"relationships": {
-							Type: "object",
-							Properties: map[string]property{
-								"organization": {
-									Type: "object",
-									Properties: map[string]property{
-										"data": {
-											Type: "object",
-											Properties: map[string]property{
-												"type": {Type: "string", Enum: []string{"organizations"}},
-												"id":   {Type: "string", Format: "uuid"},
-											},
-											Required: []string{"type", "id"},
-										},
-									},
-									Required: []string{"data"},
+					Spec: schemaObject{
+						Properties: map[string]property{
+							"type": {Type: "string", Enum: []string{"customers"}},
+							"attributes": {
+								Type: "object",
+								Properties: map[string]property{
+									"first_name":    {Type: "string", MaxLength: 60, Example: "John"},
+									"last_name":     {Type: "string", MaxLength: 60, Example: "Doe"},
+									"kind":          {Type: "string", Enum: []string{"individual", "freelancer"}, Example: "individual"},
+									"email":         {Type: "string", Format: "email", Example: "john.doe@clients.eu", MaxLength: 250},
+									"locale":        {Type: "string", MaxLength: 2, MinLength: 2, Example: "fr", Description: "The locale of the client. It is used to generate the invoice in this language."},
+									"address":       {Type: "string", MaxLength: 250, Description: "The address of the client. (eg street, number, floor, door, etc)"},
+									"city":          {Type: "string", MaxLength: 50, Example: "Paris"},
+									"zip_code":      {Type: "string", MaxLength: 20, Example: "75009"},
+									"province_code": {Type: "string", MaxLength: 2, Description: "Represents the province code of the client. It is required only for Italian organizations"},
+									"country_code":  {Type: "string", MaxLength: 2, Example: "fr"},
 								},
+								Required: []string{"first_name", "last_name", "email"},
 							},
-							Required: []string{"organization"},
+							"relationships": {
+								Type: "object",
+								Properties: map[string]property{
+									"organization": {
+										Type: "object",
+										Properties: map[string]property{
+											"data": {
+												Type: "object",
+												Properties: map[string]property{
+													"type": {Type: "string", Enum: []string{"organizations"}},
+													"id":   {Type: "string", Format: "uuid"},
+												},
+												Required: []string{"type", "id"},
+											},
+										},
+										Required: []string{"data"},
+									},
+								},
+								Required: []string{"organization"},
+							},
 						},
+						Required: []string{"type", "attributes", "relationships"},
 					},
-					Required: []string{"type", "attributes", "relationships"},
 				},
 				"ListMeta": {
 					Type: "object",
-					Properties: map[string]property{
-						"current_page": {Type: "integer", Example: 2},
-						"next_page":    {Type: "integer", Example: nil},
-						"prev_page":    {Type: "integer", Example: 1},
-						"total_pages":  {Type: "integer", Example: 2},
-						"total_count":  {Type: "integer", Example: 150},
-						"per_page":     {Type: "integer", Example: 100},
+					Spec: schemaObject{
+						Properties: map[string]property{
+							"current_page": {Type: "integer", Example: 2},
+							"next_page":    {Type: "integer", Example: nil},
+							"prev_page":    {Type: "integer", Example: 1},
+							"total_pages":  {Type: "integer", Example: 2},
+							"total_count":  {Type: "integer", Example: 150},
+							"per_page":     {Type: "integer", Example: 100},
+						},
 					},
 				},
 			},
